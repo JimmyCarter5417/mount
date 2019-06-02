@@ -7,32 +7,32 @@ string util::transform(const string& path)
 	string path1 = path;
 
 	std::transform(path1.begin(), path1.end(), path1.begin(),
-		[](char ch)
-	{
-		return ch == '/' ? '\\' : ch;
-	});
+		            [](char ch)
+	                {
+		                return ch == '/' ? '\\' : ch;
+	                });
 
 	return path1;
 }
 
 bool util::mkdir(const string& path)
 {
-	//½«Ğ±¸Ü×ªÎª·´Ğ±¸Ü
+	//å°†æ–œæ è½¬ä¸ºåæ–œæ 
 	string path1 = util::transform(path);
 
 	if (_access(path1.c_str(), 06) == 0)
 		return true;
 
 	char cmd[512] = {0};
-	sprintf(cmd, "mkdir %s", path1.c_str());//±ØĞëÓÃ·´Ğ±¸Ü·Ö¸ô
+	sprintf(cmd, "mkdir %s", path1.c_str());//å¿…é¡»ç”¨åæ–œæ åˆ†éš”
 	system(cmd);
 
-	return _access(path1.c_str(), 06) == 0;//¶ÁĞ´
+	return _access(path1.c_str(), 06) == 0;//è¯»å†™
 }
 
 bool util::mkfile(const string& path, const vector<byte>& buf)
 {
-	//½«Ğ±¸Ü×ªÎª·´Ğ±¸Ü
+	//å°†æ–œæ è½¬ä¸ºåæ–œæ 
 	string path1 = util::transform(path);
 
 	FILE* fp = fopen(path1.c_str(), "wb+");
@@ -54,30 +54,30 @@ bool util::mkfile(const string& path, const vector<byte>& buf)
 
 bool util::rmdir(const string& path)
 {
-	//½«Ğ±¸Ü×ªÎª·´Ğ±¸Ü
+	//å°†æ–œæ è½¬ä¸ºåæ–œæ 
 	string path1 = util::transform(path);
 
 	if (_access(path1.c_str(), 0) == -1)
 		return true;
 
 	char cmd[512] = { 0 };
-	sprintf(cmd, "rd /s /q %s", path1.c_str());//±ØĞëÓÃ·´Ğ±¸Ü·Ö¸ô
+	sprintf(cmd, "rd /s /q %s", path1.c_str());//å¿…é¡»ç”¨åæ–œæ åˆ†éš”
 	system(cmd);
 
-	return _access(path1.c_str(), 0) == -1;//²»´æÔÚ
+	return _access(path1.c_str(), 0) == -1;//ä¸å­˜åœ¨
 }
 
 bool util::rmfile(const string& path)
 {
-	//½«Ğ±¸Ü×ªÎª·´Ğ±¸Ü
+	//å°†æ–œæ è½¬ä¸ºåæ–œæ 
 	string path1 = util::transform(path);
 
 	if (_access(path1.c_str(), 0) == -1)
 		return true;
 
 	char cmd[512] = { 0 };
-	sprintf(cmd, "del /f /s /q %s", path1.c_str());//±ØĞëÓÃ·´Ğ±¸Ü·Ö¸ô
+	sprintf(cmd, "del /f /s /q %s", path1.c_str());//å¿…é¡»ç”¨åæ–œæ åˆ†éš”
 	system(cmd);
 
-	return _access(path1.c_str(), 0) == -1;//²»´æÔÚ
+	return _access(path1.c_str(), 0) == -1;//ä¸å­˜åœ¨
 }

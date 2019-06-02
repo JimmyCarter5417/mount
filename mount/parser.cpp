@@ -9,7 +9,7 @@ Parser::Parser(const string& src, const string& dst)
 , dst_(util::transform(dst))
 , fp_(nullptr)
 {
-	pcache_[2] = "/";//¸ùÄ¿Â¼inodeºÅ¹Ì¶¨Îª2£¬±ØĞëÊÂÏÈÖ¸¶¨
+	pcache_[2] = "/";//æ ¹ç›®å½•inodeå·å›ºå®šä¸º2ï¼Œå¿…é¡»äº‹å…ˆæŒ‡å®š
 }
 
 Parser::~Parser()
@@ -22,13 +22,13 @@ Parser::~Parser()
 	}
 }
 
-//ºöÂÔlost+found
+//å¿½ç•¥lost+found
 bool Parser::isValidInode(uint inode)
 {
 	return inode == 2 || inode >= 12;
 }
 
-//offsetÈôÎªint×î´óÖ»Ö§³Ö2G
+//offsetè‹¥ä¸ºintæœ€å¤§åªæ”¯æŒ2G
 bool Parser::read(void* buf, uint len, uint offset)
 {
 	if (!fp_)
@@ -79,7 +79,7 @@ bool Parser::getGds()
 {
 	for (int i = 0; i < fs_.flex_count; ++i)
 	{
-		//flex¿é×éµÄµÚÒ»¸ö¿é×éµÄµÚÒ»¸öÂß¼­¿é±£´æµÄÊÇsuperblock£¬±ØĞë×¢Òâ
+		//flexå—ç»„çš„ç¬¬ä¸€ä¸ªå—ç»„çš„ç¬¬ä¸€ä¸ªé€»è¾‘å—ä¿å­˜çš„æ˜¯superblockï¼Œå¿…é¡»æ³¨æ„
 		uint offset = fs_.block_size * fs_.blocks_per_group * fs_.groups_per_flex * i + fs_.block_size;
 
 		for (int j = 0; j < fs_.groups_per_flex; ++j)
@@ -108,24 +108,29 @@ bool Parser::getInodeBitmap()
 	{
 		if (gds_[i].bg_inode_bitmap_lo)
 		{
-			//¶ÁÈ¡µÚi¸ö¿é×éµÄinodeÎ»Í¼ËùÔÚµÄ¿é
+			//è¯»å–ç¬¬iä¸ªå—ç»„çš„inodeä½å›¾æ‰€åœ¨çš„å—
 			vector<byte> buf(fs_.block_size);
 			int offset = gds_[i].bg_inode_bitmap_lo * fs_.block_size;
 			read(buf.data(), buf.size(), offset);
-			//´Ó¿éÖĞÌáÈ¡inodeÎ»Í¼Êı¾İ
+			//ä»å—ä¸­æå–inodeä½å›¾æ•°æ®
 			for (int j = 0; j < fs_.inodes_per_group; ++j)
 			{
 				if (buf[j >> 3] & (1 << (j & 7)))
-					bmAllInode_.set(cur), count++;
+				{
+					bmAllInode_.set(cur);
+					count++;
+				}	
 				else
+				{
 					bmAllInode_.clear(cur);
+				}	
 
 				++cur;
 			}
 		}
 		else
 		{
-			//Î´Ê¹ÓÃµÄ¿é×éinodeÎ»Í¼Ò»ÂÉÇåÁã Ó¦¸Ã²»»á³öÏÖ
+			//æœªä½¿ç”¨çš„å—ç»„inodeä½å›¾ä¸€å¾‹æ¸…é›¶ åº”è¯¥ä¸ä¼šå‡ºç°
 			for (int end = cur + fs_.inodes_per_group; cur < end; ++cur)
 			{
 				bmAllInode_.clear(cur);
@@ -138,14 +143,14 @@ bool Parser::getInodeBitmap()
 
 bool Parser::getInodes()
 {
-	//¼ì²â0ºÅinodeÎŞÒâÒå
+	//æ£€æµ‹0å·inodeæ— æ„ä¹‰
 	for (int i = 0; i < fs_.inode_count; ++i)
 	{
 		if (bmAllInode_.get(i))
 		{
-			uint gdIdx = i / fs_.inodes_per_group;//inodeËùÔÚµÄ¿é×é
-			int offset = fs_.inode_size * ((i - 1) % fs_.inodes_per_group)//inodeÔÚ¿é×éinode±íµÄÄÚ²¿Æ«ÒÆ
-				 + gds_[gdIdx].bg_inode_table_lo * fs_.block_size;//¿é×éinode±íÎ»ÖÃ
+			uint gdIdx = i / fs_.inodes_per_group;//inodeæ‰€åœ¨çš„å—ç»„
+			int offset = fs_.inode_size * ((i - 1) % fs_.inodes_per_group)//inodeåœ¨å—ç»„inodeè¡¨çš„å†…éƒ¨åç§»
+				       + gds_[gdIdx].bg_inode_table_lo * fs_.block_size;//å—ç»„inodeè¡¨ä½ç½®
 			
 			ext4_inode inode = {0};
 			read(&inode, sizeof inode, offset);
@@ -160,7 +165,7 @@ bool Parser::getData()
 {	
 	for (int i = 0; i < bmAllInode_.capacity(); ++i)
 	{
-		//¹ıÂË²»¹ØĞÄµÄinode
+		//è¿‡æ»¤ä¸å…³å¿ƒçš„inode
 		if (!isValidInode(i))
 			continue;
 
@@ -169,26 +174,26 @@ bool Parser::getData()
 			if (!(icache_[i].i_flags & EXT4_EXTENTS_FL))
 				continue;
 
-			std::vector<ext4_extent> vExtent;//Ò¶×Ó½Úµã
+			std::vector<ext4_extent> vExtent;//å¶å­èŠ‚ç‚¹
 
 			if (getExtents(icache_[i], vExtent))
 			{
-				//Ä¿Â¼ºÍÎÄ¼şÒª·Ö±ğ´¦Àí
+				//ç›®å½•å’Œæ–‡ä»¶è¦åˆ†åˆ«å¤„ç†
 				if (icache_[i].i_mode & S_IFDIR)
 				{
-					//Ë³Ğò±éÀúextentµÃµ½ËùÓĞÊı¾İ
+					//é¡ºåºéå†extentå¾—åˆ°æ‰€æœ‰æ•°æ®
 					for (const ext4_extent& extent: vExtent)
 					{
-						//µ±Ç°extentÖ¸ÏòµÄ¿éÊıÄ¿
+						//å½“å‰extentæŒ‡å‘çš„å—æ•°ç›®
 						uint blocks = extent.ee_len;
 						if (blocks > 32768)
 							blocks -= 32768;
 
-						//Ò»´Î¶Á³öËùÓĞÊı¾İ¿é
+						//ä¸€æ¬¡è¯»å‡ºæ‰€æœ‰æ•°æ®å—
 						vector<byte> buf(fs_.block_size * blocks, 0);
 						read(buf.data(), buf.size(), fs_.block_size * extent.ee_start_lo);
 
-						//·Ö±ğ¶ÁÈ¡¸÷¸ödentry
+						//åˆ†åˆ«è¯»å–å„ä¸ªdentry
 						int offset = 0;
 						while (offset < buf.size())
 						{
@@ -200,12 +205,12 @@ bool Parser::getData()
 							if (strcmp(dentry.name, ".") != 0 &&
 								strcmp(dentry.name, "..") != 0)
 							{
-								//¹ıÂË²»¹ØĞÄµÄinode
+								//è¿‡æ»¤ä¸å…³å¿ƒçš„inode
 								if (isValidInode(dentry.inode))
 								{
-									//ÉèÖÃinodeºÅµÄ¶ÔÓ¦Â·¾¶
+									//è®¾ç½®inodeå·çš„å¯¹åº”è·¯å¾„
 									pcache_[dentry.inode] = pcache_[i] + dentry.name;
-									//dentryÊÇÄ¿Â¼µÄ»°Â·¾¶ºóÃæÌí¼Óslash
+									//dentryæ˜¯ç›®å½•çš„è¯è·¯å¾„åé¢æ·»åŠ slash
 									if (dentry.file_type == 0x2)
 									{
 										pcache_[dentry.inode] += "/";
@@ -219,26 +224,26 @@ bool Parser::getData()
 				if (icache_[i].i_mode & S_IFREG)
 				{
 					uint left = icache_[i].i_size_lo;
-					//Ë³Ğò±éÀúextentµÃµ½ËùÓĞÊı¾İ
+					//é¡ºåºéå†extentå¾—åˆ°æ‰€æœ‰æ•°æ®
 					for (const ext4_extent& extent : vExtent)
 					{
-						//µ±Ç°extentÖ¸ÏòµÄ¿éÊıÄ¿
+						//å½“å‰extentæŒ‡å‘çš„å—æ•°ç›®
 						uint blocks = extent.ee_len;
 						if (blocks > 32768)
 							blocks -= 32768;
 
-						//Ò»´Î¶Á³öËùÓĞÊı¾İ¿é
+						//ä¸€æ¬¡è¯»å‡ºæ‰€æœ‰æ•°æ®å—
 						vector<byte> buf(fs_.block_size * blocks, 0);
 						read(buf.data(), buf.size(), fs_.block_size * extent.ee_start_lo);
-						//ÎÄ¼ş´óĞ¡²»Ò»¶¨ÊÇ¿éµÄÕûÊı±¶£¬×¢Òâ¼ÆËã
+						//æ–‡ä»¶å¤§å°ä¸ä¸€å®šæ˜¯å—çš„æ•´æ•°å€ï¼Œæ³¨æ„è®¡ç®—
 						uint towrite = buf.size();
 						if (buf.size() > left)
 							towrite = left;
-						//Ìí¼Óµ½ÎÄ¼şdcache
+						//æ·»åŠ åˆ°æ–‡ä»¶dcache
 						dcache_[i].insert(dcache_[i].end(), buf.begin(), buf.begin() + towrite);
 
 						left -= towrite;
-						//Ó¦¸Ã²»ÓÃÅĞ¶Ïleft£¬³ı·Ç¶ÁvExtent³ö´í
+						//åº”è¯¥ä¸ç”¨åˆ¤æ–­leftï¼Œé™¤éè¯»vExtentå‡ºé”™
 						if (left <= 0)
 							break;
 					}					
@@ -254,36 +259,36 @@ bool Parser::getExtents(const ext4_inode& inode, std::vector<ext4_extent>& vExte
 {
 	vExtent.clear();
 
-	//µ¥¸ö¿é»òinode.i_blockµÄext4_extent_idx¼°ext4_extent_header
-	//ÊÊÓÃÓÚÖĞ¼ä½Úµã
+	//å•ä¸ªå—æˆ–inode.i_blockçš„ext4_extent_idxåŠext4_extent_header
+	//é€‚ç”¨äºä¸­é—´èŠ‚ç‚¹
 	struct MyExtentIdx
 	{
 		ext4_extent_header header;
 		std::vector<ext4_extent_idx> vidx;
 	};
 
-	std::queue<MyExtentIdx> qExtentIdx;//²ãĞò±éÀúextentÊ÷
+	std::queue<MyExtentIdx> qExtentIdx;//å±‚åºéå†extentæ ‘
 
 	ext4_extent_header header = { 0 };
 	memcpy(&header, inode.i_block, sizeof header);
 
-	//magicÏà·û£¬ÇÒÓĞĞ§Ïî´óÓÚ0£¬²Å¼ÌĞø´¦Àí
+	//magicç›¸ç¬¦ï¼Œä¸”æœ‰æ•ˆé¡¹å¤§äº0ï¼Œæ‰ç»§ç»­å¤„ç†
 	if (header.eh_magic != 0xF30A || header.eh_entries == 0)
 		return false;
 
-	if (header.eh_depth == 0)//Ò¶×Ó½Úµã
+	if (header.eh_depth == 0)//å¶å­èŠ‚ç‚¹
 	{
 		vExtent.resize(header.eh_entries);
 
 		for (int i = 0; i < header.eh_entries; ++i)
 		{
-			//Ö±½Ó´Ói_block¿½±´extent
+			//ç›´æ¥ä»i_blockæ‹·è´extent
 			memcpy(vExtent.data() + i,
 				(byte*)inode.i_block + sizeof ext4_extent_header + i * sizeof ext4_extent,
 				sizeof ext4_extent);
 		}
 	}
-	else//ÄÚ²¿Ë÷Òı½Úµã
+	else//å†…éƒ¨ç´¢å¼•èŠ‚ç‚¹
 	{
 		MyExtentIdx myExtentIdx;
 		myExtentIdx.header = header;
@@ -291,16 +296,16 @@ bool Parser::getExtents(const ext4_inode& inode, std::vector<ext4_extent>& vExte
 
 		for (int i = 0; i < header.eh_entries; ++i)
 		{
-			//Ö±½Ó´Ói_block¿½±´extent_idx
+			//ç›´æ¥ä»i_blockæ‹·è´extent_idx
 			memcpy(myExtentIdx.vidx.data() + i,
-				(byte*)inode.i_block + sizeof ext4_extent_header + i * sizeof ext4_extent,
-				sizeof ext4_extent);
+				   (byte*)inode.i_block + sizeof ext4_extent_header + i * sizeof ext4_extent,
+                   sizeof ext4_extent);
 		}
 
 		qExtentIdx.push(myExtentIdx);
 	}
 
-	//ÓÉextent_idx²ãĞò±éÀúµÃµ½ËùÓĞextent
+	//ç”±extent_idxå±‚åºéå†å¾—åˆ°æ‰€æœ‰extent
 	while (!qExtentIdx.empty())
 	{
 		MyExtentIdx myEventIdx = qExtentIdx.front();
@@ -309,13 +314,13 @@ bool Parser::getExtents(const ext4_inode& inode, std::vector<ext4_extent>& vExte
 		for (const ext4_extent_idx& idx : myEventIdx.vidx)
 		{
 			vector<byte> buf(fs_.block_size);
-			//¶ÁÈ¡ÖĞ¼ä½ÚµãÖ¸ÏòµÄblock
+			//è¯»å–ä¸­é—´èŠ‚ç‚¹æŒ‡å‘çš„block
 			read(buf.data(), buf.size(), fs_.block_size * idx.ei_block);
 
 			ext4_extent_header header = { 0 };
 			memcpy(&header, buf.data(), sizeof header);
 
-			if (header.eh_depth > 0)//Ë÷Òı½Úµã
+			if (header.eh_depth > 0)//ç´¢å¼•èŠ‚ç‚¹
 			{
 				MyExtentIdx idx;
 				idx.header = header;
@@ -324,21 +329,21 @@ bool Parser::getExtents(const ext4_inode& inode, std::vector<ext4_extent>& vExte
 				for (int i = 0; i < header.eh_entries; ++i)
 				{
 					memcpy(&idx.vidx[i],
-						buf.data() + sizeof(header)+i * sizeof ext4_extent_idx,
-						sizeof ext4_extent_idx);
+						   buf.data() + sizeof(header) + i * sizeof ext4_extent_idx,
+						   sizeof ext4_extent_idx);
 				}
 
-				qExtentIdx.push(idx);//Èë¶ÓÁĞ
+				qExtentIdx.push(idx);//å…¥é˜Ÿåˆ—
 			}
-			else//Ò¶×Ó½Úµã
+			else//å¶å­èŠ‚ç‚¹
 			{
 				vExtent.assign(header.eh_entries, {0});
 
 				for (int i = 0; i < header.eh_entries; ++i)
 				{
 					memcpy(vExtent.data() + i,
-						buf.data() + sizeof(header)+i * sizeof ext4_extent,
-						sizeof ext4_extent);
+						   buf.data() + sizeof(header) + i * sizeof ext4_extent,
+						   sizeof ext4_extent);
 				}
 			}
 		}
@@ -351,7 +356,7 @@ bool Parser::work()
 {
 	util::rmdir(dst_);
 
-	//´´½¨ËùÓĞÄ¿Â¼
+	//åˆ›å»ºæ‰€æœ‰ç›®å½•
 	for (const std::pair<uint, string>& item : pcache_)
 	{
 		if (item.second.back() == '/')
@@ -360,7 +365,7 @@ bool Parser::work()
 		}
 	}
 
-	//´´½¨ËùÓĞÎÄ¼ş
+	//åˆ›å»ºæ‰€æœ‰æ–‡ä»¶
 	for (const std::pair<uint, vector<byte>>& item : dcache_)
 	{
 		util::mkfile(dst_ + pcache_[item.first], item.second);

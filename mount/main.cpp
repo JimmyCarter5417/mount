@@ -2,8 +2,6 @@
 #include <cassert>
 #include <vector>
 
-using std::vector;
-
 int main(int argc, char** argv)
 {
 	if (argc < 3)
@@ -19,9 +17,7 @@ int main(int argc, char** argv)
 	parser.getInodeBitmap();	
 	parser.getInodes();
 	parser.getData();
-	parser.work();
-	
-	
+	parser.work();	
 
 	return 0;
 }

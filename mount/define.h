@@ -18,7 +18,7 @@
 #define SUPER_BLOCK_SIZE 1024
 #define GROUP_DESCRIPTOR_SIZE 64
 
-//³¬¼¶¿é±êÖ¾
+//è¶…çº§å—æ ‡å¿—
 #define INCOMPAT_FILETYPE		0x2
 #define INCOMPAT_META_BG		0x10
 #define INCOMPAT_EXTENTS		0x40
@@ -27,12 +27,12 @@
 #define INCOMPAT_INLINE_DATA	0x8000
 #define RO_COMPAT_SPARSE_SUPER 0x2
 
-//¿é×éÃèÊö·û±êÖ¾
+//å—ç»„æè¿°ç¬¦æ ‡å¿—
 #define EXT4_BG_INODE_UNINIT 0x1
 #define EXT4_BG_BLOCK_UNINIT 0x2
 #define EXT4_BG_INODE_ZEROED 0x4
 
-//inode±êÖ¾
+//inodeæ ‡å¿—
 //i_mode
 #define S_IFIFO 0x1000
 #define S_IFCHR 0x2000	

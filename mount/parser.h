@@ -61,7 +61,7 @@ private:
 
 	std::unordered_map<uint, ext4_inode> icache_;//inode num -> inode
 	std::unordered_map<uint, string> pcache_;//inode num -> path
-	std::unordered_map<uint, vector<byte>> dcache_;//inode num -> data£¬½öÏŞÆÕÍ¨ÎÄ¼ş
+	std::unordered_map<uint, vector<byte>> dcache_;//inode num -> dataï¼Œä»…é™æ™®é€šæ–‡ä»¶
 };
 
 #endif//PARSER_H

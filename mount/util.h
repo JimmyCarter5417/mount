@@ -37,13 +37,13 @@ namespace util
 			max_ = max;
 
 			bitmap_.resize(ceil(max / (8 * sizeof(unsigned int))), 0);
-			//清零
+			//娓呴浂
 			std::transform(begin(bitmap_), end(bitmap_), begin(bitmap_),
 				[](unsigned int val){ return 0; });
 		}
 
-		//i >> 5相当于i / 32
-		//i & 31相当于i % 32
+		//i >> 5鐩稿綋浜巌 / 32
+		//i & 31鐩稿綋浜巌 % 32
 
 		void set(unsigned int i)
 		{
